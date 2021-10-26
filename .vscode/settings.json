@@ -1,0 +1,17 @@
+{
+  "editor.formatOnSave": false,
+  "[css]": {
+    "editor.formatOnSave": true
+  },
+  "[yml]": {
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.formatOnSave": true
+  },
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": true,
+    "source.fixAll.tslint": true,
+    "source.fixAll": true
+  },
+}
