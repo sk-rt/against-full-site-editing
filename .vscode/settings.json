@@ -6,12 +6,14 @@
   "[yml]": {
     "editor.formatOnSave": true
   },
+  "[md]": {
+    "editor.formatOnSave": true
+  },
   "[json]": {
     "editor.formatOnSave": true
   },
-  "editor.codeActionsOnSave": {
-    "source.fixAll.eslint": true,
-    "source.fixAll.tslint": true,
-    "source.fixAll": true
+  "[js]": {
+    "editor.formatOnSave": true
   },
+  
 }
