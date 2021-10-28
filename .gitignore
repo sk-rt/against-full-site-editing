@@ -7,3 +7,5 @@ logs
 node_modules
 .env
 .env.*
+
+.wp-content
