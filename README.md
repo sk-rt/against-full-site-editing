@@ -37,7 +37,9 @@ yarn && yarn wp:start
 - JavaSctipt
 <!-- - [CSS](./themes/against-fse/admin-assets/js/custom-block-editor.js) -->
 
----
+
+
+
 
 ## theme.json
 
@@ -93,6 +95,7 @@ WordPress 5.8 から導入された API。
       "palette": [],
       "text": false
     },
+    // falseに設定すると `supportsLayout` を無効化できる。
     "layout": {
       "contentSize": "600px",
       "wideSize": "800px"
@@ -132,6 +135,25 @@ cf.
 
 - https://ja.wordpress.org/team/handbook/block-editor/how-to-guides/themes/theme-json/
 - https://github.com/WordPress/WordPress/blob/b8e6a3c334d03b6b12bf1653375dda8cefb0d13e/wp-includes/class-wp-theme-json.php#L181
+
+
+### Layout block supports（幅広・全幅）
+
+5.8から導入された **layout block supports**（＊正式名称不明）について。  
+これが有効化されると、対応するブロックのalignツールボタンに、記事幅からはみ出た「幅広(Wide width)」「全幅(Full width)」が追加される。（`__experimentalLayout:true` のブロック）
+
+現時点でこのフラグ（`supportsLayout`）はtheme.jsonがあると自動で有効化される。  
+無効化する方法は以下。
+
+- theme.jsonの `settings.layout` が `false` または空オブジェクト `{}` を設定。
+- 後述する `block_editor_settings_all` フィルターで `$editor_settings['supportsLayout'] = false;`に。
+- 個々のブロックの `support.__experimentalLayout` を`false` に。
+
+cf. 
+- https://github.com/WordPress/wordpress-develop/pull/1295/files
+
+
+
 
 ---
 
@@ -471,7 +493,7 @@ allBlocks.forEach((block) => {
 });
 ```
 
-## `blocks.registerBlockType` フィルター
+### `blocks.registerBlockType` フィルター
 
 `wp.hooks` の `blocks.registerBlockType` フィルターでブロックの設定を上書き可能。  
 試してみて有効なのは supports の上書きのみ。ほとんどはtheme.jsonなどで設定可能。
@@ -492,8 +514,42 @@ wp.hooks.addFilter(
   );
 ```
 
-## その他ツールバー・サイドパネルの削除
+### その他ツールバー・サイドパネルの削除
 
 align 系のツールバーボタンや、上記のstylesや supports系（color/fonts size）以外で実装されている個別の InspectorControls パネルなどは、現状では効率的に削除する API なし。
 
 実装を完全に上書きする形になるが、[`editor.BlockEdit` フィルター](https://developer.wordpress.org/block-editor/reference-guides/filters/block-filters/#editor-blockedit) でブロックコンポーネントの`edit()`を上書きするしかない。
+
+
+---
+
+## CSS
+
+
+[ソースコード](./themes/against-fse/admin-assets/css/custom-editor.css)
+
+まずは以下の方法で css ファイルを読み込む。  
+
+```php
+function enqueue_cutomize_block_editor_assets()
+{
+     wp_enqueue_style(
+        'custom-editor-style',
+        get_stylesheet_directory_uri().'/admin-assets/css/custom-editor.css',
+        ['wp-edit-blocks'],
+        '1.0.0'
+    );
+}
+add_action('enqueue_block_editor_assets', 'enqueue_cutomize_block_editor_assets');
+```
+
+### エディターの記事幅の調整
+
+theme.jsonがある状態で、幅広・全幅機能(`supportsLayout`)をオフにした場合、編集画面の記事幅が領域いっぱいに広がるので以下の様に幅を指定する。
+
+```css
+.editor-styles-wrapper {
+  max-width: 640px;
+  margin: 0 auto;
+}
+```

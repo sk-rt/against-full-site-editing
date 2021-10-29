@@ -28,12 +28,20 @@ function enqueue_cutomize_block_editor_assets()
     $temp_path = get_stylesheet_directory();
     // JS
     $js_path = '/admin-assets/js/custom-block-editor.js';
-    wp_enqueue_script('custom-editor-script', $temp_url .  $js_path, array('wp-blocks', 'wp-dom-ready', 'wp-edit-post'), get_filetime($temp_path . $js_path), false);
+    wp_enqueue_script(
+        'custom-editor-script',
+        $temp_url .  $js_path,
+        array('wp-blocks', 'wp-dom-ready', 'wp-edit-post'),
+        get_filetime($temp_path . $js_path),
+        false
+    );
     // CSS
+    $css_path = '/admin-assets/css/custom-editor.css';
     wp_enqueue_style(
         'custom-editor-style',
-        get_stylesheet_directory_uri() . '/admin-assets/css/custom-editor.css',
-        '1.0'
+        $temp_url .  $css_path,
+        ['wp-edit-blocks'],
+        get_filetime($temp_path . $css_path)
     );
 }
 add_action('enqueue_block_editor_assets', 'enqueue_cutomize_block_editor_assets');
