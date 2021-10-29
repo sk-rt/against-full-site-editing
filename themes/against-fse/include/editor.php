@@ -5,6 +5,8 @@
 Editor
 
  ***************************************************************/
+
+
 /**
  * Remove block-library/style.min.css
  */
@@ -26,7 +28,7 @@ function enqueue_cutomize_block_editor_assets()
     $temp_path = get_stylesheet_directory();
     // JS
     $js_path = '/admin-assets/js/custom-block-editor.js';
-    wp_enqueue_script('custom-editor-script',$temp_url .  $js_path, array('wp-blocks', 'wp-dom-ready', 'wp-edit-post'), get_filetime($temp_path . $js_path), false);
+    wp_enqueue_script('custom-editor-script', $temp_url .  $js_path, array('wp-blocks', 'wp-dom-ready', 'wp-edit-post'), get_filetime($temp_path . $js_path), false);
     // CSS
     wp_enqueue_style(
         'custom-editor-style',
@@ -86,7 +88,7 @@ function custom_allowed_block_types($allowed_block_types)
         'core/site-logo', // Site Logo
         // ------ media -------
         'core/audio', // Audio
-        'core/cover', // Cover
+        // 'core/cover', // Cover
         'core/file', // File
         'core/gallery', // Gallery
         'core/image', // Image
@@ -154,24 +156,45 @@ function filter_block_editor_settings($editor_settings, $editor_context)
 }
 add_filter('block_editor_settings_all', 'filter_block_editor_settings', 10, 2);
 
+/**
+ * ブロックカテゴリのフィルター
+ * カテゴリを削除すると、属するブロックは Uncategorized カテゴリに入る。
+ * ブロックごと削除される訳ではない。
+ *
+ * @param array $block_categories 全カテゴリの配列
+ * @param array $editor_context
+ * @return array
+ */
+function filter_block_categories($block_categories, $editor_context)
+{
+    // 全カテゴリスラッグ
+    // 'text', 'media', 'design', 'widgets', 'theme', 'embed', 'reusable', 'text', 'media', 'design', 'widgets', 'theme', 'embed', 'reusable'
+    $remove_categories = ['some-categoriy']; // 削除するカテゴリ
+    $filterd_categories = array_filter($block_categories, function ($category) use ($remove_categories) {
+        return !in_array($category['slug'], $remove_categories, true);
+    });
+    return $filterd_categories;
+}
+
+add_filter('block_categories_all', 'filter_block_categories', 10, 2);
 
 /**
  * テーマ機能の無効化
  */
 function remove_block_editor_supports()
 {
-     // ブロックエディターのパターンを削除
+    // ブロックエディターのパターンを削除
     remove_theme_support('core-block-patterns');
 
     // 個別にパターンの削除
     $patterns = get_all_sorted_patterns();
-    foreach($patterns as $pattern){
-        if(strpos( $pattern['name'],'core/' ) === 0){
-            unregister_block_pattern( $pattern['name'] );
+    foreach ($patterns as $pattern) {
+        if (strpos($pattern['name'], 'core/') === 0) {
+            unregister_block_pattern($pattern['name']);
         };
     }
 }
-add_action('init', 'remove_block_editor_supports',10);
+add_action('init', 'remove_block_editor_supports', 10);
 
 
 /**

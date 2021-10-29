@@ -22,7 +22,7 @@
 
 ## ローカルサーバー
 
-wp-envを利用。
+wp-env を利用。
 
 ```sh
 yarn && yarn wp:start
@@ -32,13 +32,16 @@ yarn && yarn wp:start
 
 主に以下の方法でカスタマイズしていく。
 
-- [theme.json](./themes/against-fse/theme.json)
-- [PHP](./themes/against-fse/function.php)
-- [JavaSctipt](./themes/against-fse/admin-assets/js/custom-block-editor.js)
-- [CSS](./themes/against-fse/admin-assets/js/custom-block-editor.js)
+- theme.json 
+- PHP
+- JavaSctipt
+<!-- - [CSS](./themes/against-fse/admin-assets/js/custom-block-editor.js) -->
 
 ---
+
 ## theme.json
+
+[ソースコード](./themes/against-fse/theme.json)
 
 WordPress 5.8 から導入された API。  
 テーマディレクトリ直下に `theme.json` 置くと設定なしに読み込まれる。  
@@ -51,7 +54,7 @@ WordPress 5.8 から導入された API。
 > - エディターのデフォルトレイアウトの定義。幅、利用可能な配置
 
 今後成熟させていくとのことなので、できる事はなるべく theme.json で指定していく。  
-配置可能なパスはテーマ直下のみ。よって Plugin等では指定や上書き不可。
+配置可能なパスはテーマ直下のみ。よって Plugin 等では指定や上書き不可。
 
 トップレベルのフィールドは以下。  
 ブロックの機能に関するフィールドは `settings` フィールド。
@@ -67,7 +70,7 @@ WordPress 5.8 から導入された API。
 ```
 
 現時点で詳細なフィールドのドキュメントが無いので、何ができて何ができないかは実装を見るか試してみるしかない。  
-現時点で`setting`で有効そうなフィールドは以下。  
+現時点で`setting`で有効そうなフィールドは以下。
 
 ```jsonc
 {
@@ -131,9 +134,12 @@ cf.
 - https://github.com/WordPress/WordPress/blob/b8e6a3c334d03b6b12bf1653375dda8cefb0d13e/wp-includes/class-wp-theme-json.php#L181
 
 ---
+
 ## PHP
 
-function.php or plugin
+[ソースコード](./themes/against-fse/include/editor.php)
+
+function.php or pluginで実装する。
 
 ### `use_block_editor_for_post_type` フィルター
 
@@ -267,7 +273,7 @@ add_filter('block_editor_settings_all', 'filter_block_editor_settings', 10, 2);
 
 特定のテーマ機能の無効化。  
 `disable-custom-colors`、`disable-custom-font-sizes` などは theme.json で代替可能。  
-theme.jsonで設定できないもので有効そうなsupportは `core-block-patterns` 
+theme.json で設定できないもので有効そうな support は `core-block-patterns`
 
 .cf
 
@@ -284,13 +290,13 @@ add_action('init', 'remove_block_editor_supports');
 
 ### `unregister_block_pattern()`
 
-ブロックパターンを個別に削除。  
+ブロックパターンを個別に削除。
 
 ＊ `WP_Block_Patterns_Registry::get_instance()->get_all_registered()` で全パターンが取得できるはずだが、なぜか一部のみしか取得できない。
 
 ```php
 function remove_block_editor_pattern()
-{   
+{
     // 個別にパターンを削除
     unregister_block_pattern( 'core/xxx' );
 
@@ -324,12 +330,35 @@ function customize_image_sizes($size_names)
 add_filter('image_size_names_choose', 'customize_image_sizes');
 ```
 
+### `block_categories_all` フィルター
+
+ブロックカテゴリのフィルター。  
+カテゴリを削除すると、属するブロックは Uncategorized カテゴリに入り、ブロックごと削除される訳ではない。  
+カテゴリ名を変えたい時などに使うと良いかも。
+
+```php
+function filter_block_categories($block_categories, $editor_context)
+{
+    // 全カテゴリスラッグ
+    // 'text', 'media', 'design', 'widgets', 'theme', 'embed', 'reusable', 'text', 'media', 'design', 'widgets', 'theme', 'embed', 'reusable'
+    $remove_categories = ['theme']; // 削除するカテゴリ
+    $filterd_categories = array_filter($block_categories, function ($category) use ($remove_categories) {
+        return !in_array($category['slug'], $remove_categories, true);
+    });
+    return $filterd_categories;
+}
+
+add_filter('block_categories_all', 'filter_block_categories', 10, 2);
+```
 
 ---
 
-# JavaScript
+## JavaScript
 
-まずは以下の方法でjsファイルを読み込む。
+[ソースコード](./themes/against-fse/admin-assets/js/custom-block-editor.js)
+
+まずは以下の方法で js ファイルを読み込む。  
+＊JSX を使いたい時など、npm 経由で実装する時は別途ビルドが必要。
 
 ```php
 function enqueue_cutomize_block_editor_assets()
@@ -339,11 +368,10 @@ function enqueue_cutomize_block_editor_assets()
 add_action('enqueue_block_editor_assets', 'enqueue_cutomize_block_editor_assets');
 ```
 
+### `wp.richText.unregisterFormatType()`
 
-### `wp.richText.unregisterFormatType()` 
-
-RichTextコンポーネントのフォーマットタイプの削除。  
-`wp.data.select("core/rich-text").getFormatTypes()` で全てのフォーマットタイプが取得できる。　　
+RichText コンポーネントのフォーマットタイプの削除。  
+`wp.data.select("core/rich-text").getFormatTypes()` で全てのフォーマットタイプが取得できる。  
 現時点で全てのフォーマットタイプは以下。
 
 ```js
@@ -363,3 +391,109 @@ wp.domReady(() => {
 });
 ```
 
+### `wp.blocks.unregisterBlockStyle()`
+
+ブロックスタイルを削除。  
+＊サイドバーブロックパネルの「styles」。CSS style の事ではない。
+
+```js
+wp.domReady(() => {
+  // image
+  wp.blocks.unregisterBlockStyle("core/image", "rounded");
+  wp.blocks.unregisterBlockStyle("core/image", "default");
+  // quote
+  wp.blocks.unregisterBlockStyle("core/quote", "default");
+  wp.blocks.unregisterBlockStyle("core/quote", "large");
+  // button
+  wp.blocks.unregisterBlockStyle("core/button", "fill");
+  wp.blocks.unregisterBlockStyle("core/button", "outline");
+  // pullquote
+  wp.blocks.unregisterBlockStyle("core/pullquote", "default");
+  wp.blocks.unregisterBlockStyle("core/pullquote", "solid-color");
+  // separator
+  wp.blocks.unregisterBlockStyle("core/separator", "default");
+  wp.blocks.unregisterBlockStyle("core/separator", "wide");
+  wp.blocks.unregisterBlockStyle("core/separator", "dots");
+  // table
+  wp.blocks.unregisterBlockStyle("core/table", "regular");
+  wp.blocks.unregisterBlockStyle("core/table", "stripes");
+  // social-links
+  wp.blocks.unregisterBlockStyle("core/social-links", "default");
+  wp.blocks.unregisterBlockStyle("core/social-links", "logos-only");
+  wp.blocks.unregisterBlockStyle("core/social-links", "pill-shape");
+});
+```
+
+`wp.blocks.getBlockTypes()` で全てのブロックが取得できるので、全ブロックの styles の削除は以下でできる。
+
+```js
+wp.domReady(() => {
+  // 全てのブロックスタイルを削除
+  const allBlocks = wp.blocks.getBlockTypes();
+  allBlocks.forEach((block) => {
+    if (block.styles.length === 0) {
+      return;
+    }
+    block.styles.forEach((style) => {
+      wp.blocks.unregisterBlockStyle(block.name, style.name);
+    });
+  });
+});
+```
+
+### `wp.blocks.unregisterBlockVariation()`
+
+ブロックバリエーションの削除。  
+`core/enmbed` など大量にあるバリエーションを整理できる。
+
+```js
+// "core/embed"のバリエーションを以下を除いて削除
+wp.domReady(() => {
+  const allowedEmbedVariation = ["youtube", "vimeo", "twitter", "wordpress"];
+  wp.blocks.getBlockVariations("core/embed").forEach((variation) => {
+    if (allowedEmbedVariation.indexOf(variation.name) !== -1) return;
+    wp.blocks.unregisterBlockVariation("core/embed", variation.name);
+  });
+});
+```
+
+styles と同様に全ブロックで `blocks.variations` を持つブロックを抽出してバリエーションを削除。
+
+```js
+const allBlocks = wp.blocks.getBlockTypes();
+allBlocks.forEach((block) => {
+  if (block.variations.length === 0) {
+    return;
+  }
+  block.variations.foreach((variation) => {
+    wp.blocks.unregisterBlockVariation(block.name, variation.name);
+  });
+});
+```
+
+## `blocks.registerBlockType` フィルター
+
+`wp.hooks` の `blocks.registerBlockType` フィルターでブロックの設定を上書き可能。  
+試してみて有効なのは supports の上書きのみ。ほとんどはtheme.jsonなどで設定可能。
+
+```js
+wp.hooks.addFilter(
+    "blocks.registerBlockType",
+    "app/custom-block-type-filter",
+    (settings, name) => {
+      if (name === "core/heading") {
+        if (settings.supports) {
+          // AdvencedパネルのHTMLアンカー設定機能の削除
+          settings.supports.anchor = false;
+        }
+      }
+      return settings;
+    }
+  );
+```
+
+## その他ツールバー・サイドパネルの削除
+
+align 系のツールバーボタンや、上記のstylesや supports系（color/fonts size）以外で実装されている個別の InspectorControls パネルなどは、現状では効率的に削除する API なし。
+
+実装を完全に上書きする形になるが、[`editor.BlockEdit` フィルター](https://developer.wordpress.org/block-editor/reference-guides/filters/block-filters/#editor-blockedit) でブロックコンポーネントの`edit()`を上書きするしかない。
