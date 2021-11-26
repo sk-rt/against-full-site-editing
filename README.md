@@ -159,14 +159,15 @@ cf.
 single.phpなどのテンプレートを、ブロックエディターの様にhtmlで記述する方式。  
 「実験レベルの機能」とあるが、theme.jsonがあると有効化される。  
 
-また、テーマ内に静的にブロックテンプレートファイルを置く方式以外に、DBにテンプレートを保存することもでき、管理画面上でテンプレートの追加・編集、さらに投稿ごとにテンプレートを設定できてしまう。
+また、テーマ内に静的にブロックテンプレートファイルを置く方式以外に、DBにテンプレートを保存することもでき、管理画面上でテンプレートの追加・編集、さらに投稿ごとにテンプレートを設定できてしまう。  
+＊wp_posts テーブルに `post_type = wp_template` として保存される。
 
 無効化する方法は以下。
 ```php
 remove_theme_support( 'block-templates' );
 ```
 cf. 
-https://ja.wordpress.org/team/handbook/block-editor/how-to-guides/themes/block-theme-overview/
+- https://ja.wordpress.org/team/handbook/block-editor/how-to-guides/themes/block-theme-overview/
 
 
 ---
