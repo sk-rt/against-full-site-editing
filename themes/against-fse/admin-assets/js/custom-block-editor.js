@@ -35,6 +35,14 @@ function removeBlockVariatons() {
     if (allowedEmbedVariation.indexOf(variation.name) !== -1) return;
     wp.blocks.unregisterBlockVariation("core/embed", variation.name);
   });
+  /**
+   * 不要なcore/columnsのBlockVariationを削除
+   */
+  const allowedColumnsVariation = ["two-columns-equal"];
+  wp.blocks.getBlockVariations("core/columns").forEach((variation) => {
+    if (allowedColumnsVariation.indexOf(variation.name) !== -1) return;
+    wp.blocks.unregisterBlockVariation("core/columns", variation.name);
+  });
 }
 
 /**
