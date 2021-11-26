@@ -154,6 +154,20 @@ cf.
 
 
 
+### ブロックテーマ / ブロックテンプレート
+
+single.phpなどのテンプレートを、ブロックエディターの様にhtmlで記述する方式。  
+「実験レベルの機能」とあるが、theme.jsonがあると有効化される。  
+
+また、テーマ内に静的にブロックテンプレートファイルを置く方式以外に、DBにテンプレートを保存することもでき、管理画面上でテンプレートの追加・編集、さらに投稿ごとにテンプレートを設定できてしまう。
+
+無効化する方法は以下。
+```php
+remove_theme_support( 'block-templates' );
+```
+cf. 
+https://ja.wordpress.org/team/handbook/block-editor/how-to-guides/themes/block-theme-overview/
+
 
 ---
 
@@ -295,7 +309,7 @@ add_filter('block_editor_settings_all', 'filter_block_editor_settings', 10, 2);
 
 特定のテーマ機能の無効化。  
 `disable-custom-colors`、`disable-custom-font-sizes` などは theme.json で代替可能。  
-theme.json で設定できないもので有効そうな support は `core-block-patterns`
+theme.json で設定できないもので有効そうな support は `core-block-patterns`と `block-template`
 
 .cf
 
@@ -306,6 +320,9 @@ function remove_block_editor_supports()
 {
     // ブロックエディターのパターン機能を全て無効化
     remove_theme_support('core-block-patterns');
+
+    // ブロックテンプレートの無効化 
+     remove_theme_support('block-template');
 }
 add_action('init', 'remove_block_editor_supports');
 ```

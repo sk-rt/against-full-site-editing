@@ -194,6 +194,10 @@ function remove_block_editor_supports()
     // ブロックエディターのパターンを削除
     remove_theme_support('core-block-patterns');
 
+     // ブロックテンプレートの無効化 
+     /** @see https://developer.wordpress.org/block-editor/how-to-guides/themes/block-theme-overview/ */
+     remove_theme_support('block-template');
+
     // 個別にパターンの削除
     $patterns = get_all_sorted_patterns();
     foreach ($patterns as $pattern) {
