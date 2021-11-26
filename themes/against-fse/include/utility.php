@@ -1,4 +1,5 @@
 <?php
+
 /***************************************************************
 
 
@@ -20,13 +21,13 @@ function debug_log($var)
  * @return void
  */
 function get_filetime($filepath)
-    {
-        if (file_exists($filepath)) {
-            return filemtime($filepath);
-        } else {
-            return null;
-        }
-    };
+{
+    if (file_exists($filepath)) {
+        return filemtime($filepath);
+    } else {
+        return null;
+    }
+};
 /**
  * カテゴリ・ブロック名でソートした全ブロック
  * @return array
@@ -52,7 +53,7 @@ function get_all_sorted_blocks()
 function get_all_sorted_patterns()
 {
     $all_patterns = WP_Block_Patterns_Registry::get_instance()->get_all_registered();
-  
+
     usort($all_patterns, function ($right, $left) {
         return $right['categories'][0] === $left['categories'][0] ?
             strcmp($right['name'], $left['name']) :
