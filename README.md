@@ -2,7 +2,7 @@
 
 [Full Site Editing](https://developer.wordpress.org/block-editor/getting-started/full-site-editing/)を掲げ進化し続けるブロックエディターと戦うための知見のメモ
 
-対応バージョン: `WordPress 5.8.1`
+対応バージョン: `WordPress 5.8.1 - WordPress 6.6.2`
 
 ## 動機
 
@@ -12,7 +12,7 @@
 
 ## スコープ
 
-- ブロックエディターに関するの機能削除・変更
+- ブロックエディターに関する機能の削除・変更
 
 以下のものは含みません。
 
@@ -46,6 +46,8 @@ yarn && yarn wp:start
 [ソースコード](./themes/against-fse/theme.json)
 
 WordPress 5.8 から導入された API。  
+WordPress 5.9以降はバージョン2、WordPress 6.6以降はバージョン3となる。
+
 テーマディレクトリ直下に `theme.json` 置くと設定なしに読み込まれる。  
 公式のリファレンスでは以下が設定可能とのことだが、設定できる部分は現行では限定的。
 
@@ -63,16 +65,41 @@ WordPress 5.8 から導入された API。
 
 ```json
 {
-  "version": 1,
   "settings": {},
   "styles": {},
   "customTemplates": {},
-  "templateParts": {}
+  "templateParts": {},
+	"version": 3,
+	"$schema": "https://schemas.wp.org/wp/6.6/theme.json"
 }
 ```
 
+### バージョン3の有効なフィールド
+
+WordPress 6.5から、ブロックテーマの正式リリースに伴い、公式プラグイン「Create Block Theme」が公開されている。
+
+[Create Block Theme – WordPress plugin \| WordPress\.org](https://wordpress.org/plugins/create-block-theme/)
+
+上記プラグインをインストールしたうえで、空のブロックテーマを作成すると最低限のtheme.jsonが生成されるので、それを編集していくのが望ましい。
+
+theme.jsonの初期値は公開されていないが、テーマ側のtheme.jsonが未設定だった場合、以下のひな形用JSONの内容を参照していることを確認している。
+
+`path-to-wordpress/wp-includes/theme.json`
+
+つまり、ひな形用JSONの値はほぼすべて有効と考えられるが、古いバージョンの値を後方互換のために残している可能性があるため、各値のプロパティ名を検索し、常時更新されている公式リファレンス（英文）を参照しつつ解析するのが現状で最も確実ということになる。
+
+- [theme\.json Version 3 リファレンス \(最新\) – Japanese Team – WordPress\.org 日本語](https://ja.wordpress.org/team/handbook/block-editor/reference-guides/theme-json-reference/theme-json-living/)
+- [theme\.json バージョン2 リファレンス – Japanese Team – WordPress\.org 日本語](https://ja.wordpress.org/team/handbook/block-editor/reference-guides/theme-json-reference/theme-json-v2/)
+
+現時点で最も詳細な日本語情報を掲載しているブログ。ただしこれもあくまで「6.6時点」の情報であり変更される可能性がある。
+
+[【WordPress6\.6】theme\.json の変更点 – Aki Hamano](https://aki-hamano.blog/2024/06/06/wp6-6-theme-json/)
+
+
+### 旧版：バージョン1時点の有効と思われるフィールド
+
 現時点で詳細なフィールドのドキュメントが無いので、何ができて何ができないかは実装を見るか試してみるしかない。  
-現時点で`setting`で有効そうなフィールドは以下。
+バージョン1時点で`setting`で有効そうなフィールドは以下。
 
 ```jsonc
 {
@@ -400,10 +427,19 @@ add_filter('block_categories_all', 'filter_block_categories', 10, 2);
 まずは以下の方法で js ファイルを読み込む。  
 ＊JSX を使いたい時など、npm 経由で実装する時は別途ビルドが必要。
 
+wp_enqueue_script関数の第五引数は `true` としなければ、公式のブロックスタイルを無効化できない。  
+初期値が　`false` だとhead、`true` だとbody最後尾で js ファイルを読み込むようになる。
+
 ```php
 function enqueue_cutomize_block_editor_assets()
 {
-    wp_enqueue_script('custom-editor-script', get_stylesheet_directory_uri() . '/admin-assets/js/custom-block-editor.js', array('wp-blocks', 'wp-dom-ready', 'wp-edit-post'), '1.0', false);
+    wp_enqueue_script(
+      'custom-editor-script',
+      get_stylesheet_directory_uri() . '/admin-assets/js/custom-block-editor.js',
+      array('wp-blocks', 'wp-dom-ready', 'wp-edit-post'),
+      '1.0.0',
+      true
+    );
 }
 add_action('enqueue_block_editor_assets', 'enqueue_cutomize_block_editor_assets');
 ```
